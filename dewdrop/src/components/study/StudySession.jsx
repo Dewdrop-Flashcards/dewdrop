@@ -1,0 +1,260 @@
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { cardService } from '../../services/cardService';
+import { deckService } from '../../services/deckService';
+import ReviewCard from './ReviewCard';
+
+export default function StudySession() {
+    const { deckId } = useParams();
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [deck, setDeck] = useState(null);
+    const [cards, setCards] = useState([]);
+    const [currentCardIndex, setCurrentCardIndex] = useState(0);
+    const [sessionStats, setSessionStats] = useState({
+        total: 0,
+        correct: 0,
+        incorrect: 0,
+        completed: false
+    });
+    const [cramMode, setCramMode] = useState(false);
+
+    useEffect(() => {
+        async function loadData() {
+            try {
+                setLoading(true);
+
+                // Load deck information if deckId is provided
+                if (deckId) {
+                    const deckData = await deckService.getDeckById(deckId);
+                    setDeck(deckData);
+                }
+
+                // Load cards due for review
+                const cardsData = deckId
+                    ? await cardService.getDueCards(deckId)
+                    : await cardService.getDueCards();
+
+                if (cardsData.length === 0) {
+                    setCards([]);
+                } else {
+                    setCards(cardsData);
+                    setSessionStats(prev => ({
+                        ...prev,
+                        total: cardsData.length
+                    }));
+                }
+            } catch (err) {
+                console.error('Error loading study session:', err);
+                setError('Failed to load study cards. Please try again later.');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadData();
+    }, [deckId]);
+
+    const handleToggleCramMode = async () => {
+        try {
+            setLoading(true);
+            setCramMode(!cramMode);
+
+            // If turning on cram mode, load all cards regardless of due date
+            if (!cramMode) {
+                const allCards = deckId
+                    ? await cardService.getCardsByDeckId(deckId)
+                    : await cardService.getCardsByDeckId(null); // This would need to be implemented to get all cards
+
+                setCards(allCards);
+                setSessionStats(prev => ({
+                    ...prev,
+                    total: allCards.length
+                }));
+            } else {
+                // If turning off cram mode, load only due cards
+                const dueCards = deckId
+                    ? await cardService.getDueCards(deckId)
+                    : await cardService.getDueCards();
+
+                setCards(dueCards);
+                setSessionStats(prev => ({
+                    ...prev,
+                    total: dueCards.length
+                }));
+            }
+        } catch (err) {
+            console.error('Error toggling cram mode:', err);
+            setError('Failed to load cards. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCardRated = async (cardId, performanceScore) => {
+        try {
+            // Record the review
+            const timeTaken = 0; // Would need to add timing functionality
+            await cardService.recordReview(cardId, performanceScore, timeTaken);
+
+            // Update stats
+            setSessionStats(prev => ({
+                ...prev,
+                correct: performanceScore >= 3 ? prev.correct + 1 : prev.correct,
+                incorrect: performanceScore < 3 ? prev.incorrect + 1 : prev.incorrect
+            }));
+
+            // Move to the next card or complete the session
+            if (currentCardIndex < cards.length - 1) {
+                setCurrentCardIndex(currentCardIndex + 1);
+            } else {
+                setSessionStats(prev => ({
+                    ...prev,
+                    completed: true
+                }));
+            }
+        } catch (err) {
+            console.error('Error recording review:', err);
+            setError('Failed to record your answer. Please try again.');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <strong className="font-bold">Error!</strong>
+                <span className="block sm:inline"> {error}</span>
+            </div>
+        );
+    }
+
+    if (cards.length === 0) {
+        return (
+            <div className="max-w-4xl mx-auto p-4">
+                <div className="text-center py-10 bg-green-50 rounded-lg">
+                    <h2 className="text-2xl font-bold text-green-800 mb-2">All caught up!</h2>
+                    <p className="text-green-600 mb-6">You have no cards due for review right now.</p>
+                    <div className="flex justify-center space-x-4">
+                        <button
+                            onClick={handleToggleCramMode}
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Study Anyway (Cram Mode)
+                        </button>
+                        <button
+                            onClick={() => navigate(deckId ? `/decks/${deckId}` : '/decks')}
+                            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+                        >
+                            Back to {deckId ? 'Deck' : 'Decks'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (sessionStats.completed) {
+        return (
+            <div className="max-w-4xl mx-auto p-4">
+                <div className="text-center py-10 bg-blue-50 rounded-lg">
+                    <h2 className="text-2xl font-bold text-blue-800 mb-2">Session Complete!</h2>
+                    <div className="max-w-md mx-auto">
+                        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <div className="grid grid-cols-3 gap-4 text-center">
+                                <div>
+                                    <p className="text-2xl font-bold text-gray-800">{sessionStats.total}</p>
+                                    <p className="text-sm text-gray-500">Total Cards</p>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-green-600">{sessionStats.correct}</p>
+                                    <p className="text-sm text-gray-500">Correct</p>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-red-600">{sessionStats.incorrect}</p>
+                                    <p className="text-sm text-gray-500">Incorrect</p>
+                                </div>
+                            </div>
+                            <div className="mt-6">
+                                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div
+                                        className="bg-blue-600 h-2.5 rounded-full"
+                                        style={{ width: `${(sessionStats.correct / sessionStats.total) * 100}%` }}
+                                    ></div>
+                                </div>
+                                <p className="mt-2 text-sm text-gray-600">
+                                    Success rate: {Math.round((sessionStats.correct / sessionStats.total) * 100)}%
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex justify-center space-x-4">
+                            <button
+                                onClick={() => {
+                                    setCurrentCardIndex(0);
+                                    setSessionStats({
+                                        total: cards.length,
+                                        correct: 0,
+                                        incorrect: 0,
+                                        completed: false
+                                    });
+                                }}
+                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                            >
+                                Study Again
+                            </button>
+                            <button
+                                onClick={() => navigate(deckId ? `/decks/${deckId}` : '/decks')}
+                                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+                            >
+                                Back to {deckId ? 'Deck' : 'Decks'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const currentCard = cards[currentCardIndex];
+
+    return (
+        <div className="max-w-4xl mx-auto p-4">
+            <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">
+                            {deck ? deck.name : 'Study Session'}
+                        </h2>
+                        {cramMode && (
+                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-yellow-100 text-yellow-800">
+                                Cram Mode
+                            </span>
+                        )}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                        Card {currentCardIndex + 1} of {cards.length}
+                    </div>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                    <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${((currentCardIndex + 1) / cards.length) * 100}%` }}
+                    ></div>
+                </div>
+            </div>
+
+            <ReviewCard
+                card={currentCard}
+                onRate={handleCardRated}
+            />
+        </div>
+    );
+}
