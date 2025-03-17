@@ -12,6 +12,7 @@ import MainLayout from './components/ui/MainLayout';
 import Dashboard from './pages/Dashboard';
 import DeckList from './components/decks/DeckList';
 import DeckForm from './components/decks/DeckForm';
+import SpreadsheetImport from './components/decks/SpreadsheetImport';
 import CardList from './components/cards/CardList';
 import CardForm from './components/cards/CardForm';
 import StudySession from './components/study/StudySession';
@@ -46,6 +47,7 @@ function App() {
                 }
               />
               <Route path="/decks/:deckId" element={<CardList />} />
+              <Route path="/decks/import" element={<SpreadsheetImport />} />
 
               {/* Card routes */}
               <Route path="/decks/:deckId/cards/new" element={<CardForm />} />
