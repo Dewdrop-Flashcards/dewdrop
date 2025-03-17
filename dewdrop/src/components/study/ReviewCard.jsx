@@ -22,17 +22,17 @@ export default function ReviewCard({ card, onRate }) {
 
     return (
         <div className="w-full max-w-3xl mx-auto">
-            <div className="mb-4 flex justify-between items-center">
-                <span className="text-sm text-gray-500">
+            <div className="mb-3 sm:mb-4 flex justify-between items-center">
+                <span className="text-xs sm:text-sm text-gray-500">
                     Review count: {card.review_count}
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="text-xs sm:text-sm text-gray-500">
                     Success rate: {Math.round(card.success_rate * 100)}%
                 </span>
             </div>
 
             <div
-                className="relative w-full h-80 cursor-pointer perspective-1000"
+                className="relative w-full h-64 sm:h-80 cursor-pointer perspective-1000"
                 onClick={handleFlip}
             >
                 <AnimatePresence initial={false} mode="wait">
@@ -46,8 +46,8 @@ export default function ReviewCard({ card, onRate }) {
                             transition={{ duration: 0.5 }}
                         >
                             <div className="text-center">
-                                <h3 className="text-2xl font-bold mb-4 text-gray-800">Question</h3>
-                                <div className="text-lg text-gray-700 overflow-auto max-h-48 markdown-content">
+                                <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4 text-gray-800">Question</h3>
+                                <div className="text-base sm:text-lg text-gray-700 overflow-auto max-h-36 sm:max-h-48 markdown-content">
                                     <ReactMarkdown>{card.front_content}</ReactMarkdown>
                                 </div>
                             </div>
@@ -65,8 +65,8 @@ export default function ReviewCard({ card, onRate }) {
                             transition={{ duration: 0.5 }}
                         >
                             <div className="text-center">
-                                <h3 className="text-2xl font-bold mb-4 text-blue-600">Answer</h3>
-                                <div className="text-lg text-gray-700 overflow-auto max-h-48 markdown-content">
+                                <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4 text-blue-600">Answer</h3>
+                                <div className="text-base sm:text-lg text-gray-700 overflow-auto max-h-36 sm:max-h-48 markdown-content">
                                     <ReactMarkdown>{card.back_content}</ReactMarkdown>
                                 </div>
                             </div>
@@ -89,29 +89,29 @@ export default function ReviewCard({ card, onRate }) {
                         exit={{ opacity: 0, y: 20 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <h4 className="text-lg font-medium mb-3">How well did you know this?</h4>
-                        <div className="flex justify-center space-x-3">
+                        <h4 className="text-base sm:text-lg font-medium mb-3">How well did you know this?</h4>
+                        <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                             <button
                                 onClick={() => handleDifficultyRating(0)}
-                                className="px-4 py-2 bg-red-500 text-white font-medium rounded hover:bg-red-600 transition-colors"
+                                className="px-3 sm:px-4 py-2 bg-red-500 text-white text-sm sm:text-base font-medium rounded hover:bg-red-600 transition-colors"
                             >
                                 Failed
                             </button>
                             <button
                                 onClick={() => handleDifficultyRating(1)}
-                                className="px-4 py-2 bg-orange-500 text-white font-medium rounded hover:bg-orange-600 transition-colors"
+                                className="px-3 sm:px-4 py-2 bg-orange-500 text-white text-sm sm:text-base font-medium rounded hover:bg-orange-600 transition-colors"
                             >
                                 Hard
                             </button>
                             <button
                                 onClick={() => handleDifficultyRating(3)}
-                                className="px-4 py-2 bg-yellow-500 text-white font-medium rounded hover:bg-yellow-600 transition-colors"
+                                className="px-3 sm:px-4 py-2 bg-yellow-500 text-white text-sm sm:text-base font-medium rounded hover:bg-yellow-600 transition-colors"
                             >
                                 Good
                             </button>
                             <button
                                 onClick={() => handleDifficultyRating(5)}
-                                className="px-4 py-2 bg-green-500 text-white font-medium rounded hover:bg-green-600 transition-colors"
+                                className="px-3 sm:px-4 py-2 bg-green-500 text-white text-sm sm:text-base font-medium rounded hover:bg-green-600 transition-colors"
                             >
                                 Easy
                             </button>

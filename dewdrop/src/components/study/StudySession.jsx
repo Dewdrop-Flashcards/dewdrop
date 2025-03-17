@@ -139,20 +139,20 @@ export default function StudySession() {
 
     if (cards.length === 0) {
         return (
-            <div className="max-w-4xl mx-auto p-4">
-                <div className="text-center py-10 bg-green-50 rounded-lg">
-                    <h2 className="text-2xl font-bold text-green-800 mb-2">All caught up!</h2>
-                    <p className="text-green-600 mb-6">You have no cards due for review right now.</p>
-                    <div className="flex justify-center space-x-4">
+            <div className="max-w-4xl mx-auto p-3 sm:p-4">
+                <div className="text-center py-8 sm:py-10 bg-green-50 rounded-lg">
+                    <h2 className="text-xl sm:text-2xl font-bold text-green-800 mb-2">All caught up!</h2>
+                    <p className="text-green-600 mb-4 sm:mb-6">You have no cards due for review right now.</p>
+                    <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4">
                         <button
                             onClick={handleToggleCramMode}
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm sm:text-base"
                         >
                             Study Anyway (Cram Mode)
                         </button>
                         <button
                             onClick={() => navigate(deckId ? `/decks/${deckId}` : '/decks')}
-                            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+                            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-sm sm:text-base"
                         >
                             Back to {deckId ? 'Deck' : 'Decks'}
                         </button>
@@ -164,38 +164,38 @@ export default function StudySession() {
 
     if (sessionStats.completed) {
         return (
-            <div className="max-w-4xl mx-auto p-4">
-                <div className="text-center py-10 bg-blue-50 rounded-lg">
-                    <h2 className="text-2xl font-bold text-blue-800 mb-2">Session Complete!</h2>
-                    <div className="max-w-md mx-auto">
-                        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="max-w-4xl mx-auto p-3 sm:p-4">
+                <div className="text-center py-8 sm:py-10 bg-blue-50 rounded-lg">
+                    <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-2">Session Complete!</h2>
+                    <div className="max-w-md mx-auto px-3 sm:px-0">
+                        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+                            <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
                                 <div>
-                                    <p className="text-2xl font-bold text-gray-800">{sessionStats.total}</p>
-                                    <p className="text-sm text-gray-500">Total Cards</p>
+                                    <p className="text-xl sm:text-2xl font-bold text-gray-800">{sessionStats.total}</p>
+                                    <p className="text-xs sm:text-sm text-gray-500">Total Cards</p>
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-green-600">{sessionStats.correct}</p>
-                                    <p className="text-sm text-gray-500">Correct</p>
+                                    <p className="text-xl sm:text-2xl font-bold text-green-600">{sessionStats.correct}</p>
+                                    <p className="text-xs sm:text-sm text-gray-500">Correct</p>
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-red-600">{sessionStats.incorrect}</p>
-                                    <p className="text-sm text-gray-500">Incorrect</p>
+                                    <p className="text-xl sm:text-2xl font-bold text-red-600">{sessionStats.incorrect}</p>
+                                    <p className="text-xs sm:text-sm text-gray-500">Incorrect</p>
                                 </div>
                             </div>
-                            <div className="mt-6">
+                            <div className="mt-4 sm:mt-6">
                                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                                     <div
                                         className="bg-blue-600 h-2.5 rounded-full"
                                         style={{ width: `${(sessionStats.correct / sessionStats.total) * 100}%` }}
                                     ></div>
                                 </div>
-                                <p className="mt-2 text-sm text-gray-600">
+                                <p className="mt-2 text-xs sm:text-sm text-gray-600">
                                     Success rate: {Math.round((sessionStats.correct / sessionStats.total) * 100)}%
                                 </p>
                             </div>
                         </div>
-                        <div className="flex justify-center space-x-4">
+                        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                             <button
                                 onClick={() => {
                                     setCurrentCardIndex(0);
@@ -206,13 +206,13 @@ export default function StudySession() {
                                         completed: false
                                     });
                                 }}
-                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm sm:text-base"
                             >
                                 Study Again
                             </button>
                             <button
                                 onClick={() => navigate(deckId ? `/decks/${deckId}` : '/decks')}
-                                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+                                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-sm sm:text-base"
                             >
                                 Back to {deckId ? 'Deck' : 'Decks'}
                             </button>
@@ -226,26 +226,26 @@ export default function StudySession() {
     const currentCard = cards[currentCardIndex];
 
     return (
-        <div className="max-w-4xl mx-auto p-4">
-            <div className="mb-6">
-                <div className="flex justify-between items-center mb-4">
+        <div className="max-w-4xl mx-auto p-3 sm:p-4">
+            <div className="mb-4 sm:mb-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-4 gap-2 sm:gap-0">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800">
+                        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
                             {deck ? deck.name : 'Study Session'}
                         </h2>
                         {cramMode && (
-                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-yellow-100 text-yellow-800">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs sm:text-sm font-medium bg-yellow-100 text-yellow-800 mt-1 sm:mt-0 sm:ml-2">
                                 Cram Mode
                             </span>
                         )}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-xs sm:text-sm text-gray-500">
                         Card {currentCardIndex + 1} of {cards.length}
                     </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 mb-3 sm:mb-4">
                     <div
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        className="bg-blue-600 h-1.5 sm:h-2 rounded-full transition-all duration-300"
                         style={{ width: `${((currentCardIndex + 1) / cards.length) * 100}%` }}
                     ></div>
                 </div>

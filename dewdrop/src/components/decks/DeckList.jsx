@@ -73,21 +73,21 @@ export default function DeckList() {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-2xl font-bold text-gray-800">Your Decks</h2>
-                <div className="flex space-x-2">
+                <div className="flex w-full sm:w-auto flex-wrap gap-2">
                     <Link
                         to="/decks/import"
-                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center"
+                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-3 sm:px-4 rounded flex items-center text-sm sm:text-base"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
                         </svg>
                         Import Cards
                     </Link>
                     <Link
                         to="/decks/new"
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
                     >
                         Create Deck
                     </Link>
@@ -99,17 +99,17 @@ export default function DeckList() {
                     <p className="text-gray-500">You don't have any decks yet. Create your first deck to get started!</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {decks.map(deck => (
                         <Link
                             key={deck.id}
                             to={`/decks/${deck.id}`}
                             className="block bg-white shadow-md hover:shadow-lg rounded-lg overflow-hidden transition-shadow duration-300"
                         >
-                            <div className="p-6">
-                                <div className="flex justify-between items-start">
-                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">{deck.name}</h3>
-                                    <div className="flex space-x-2">
+                            <div className="p-4 sm:p-6">
+                                <div className="flex justify-between items-start gap-2">
+                                    <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">{deck.name}</h3>
+                                    <div className="flex gap-2">
                                         <Link
                                             to={`/decks/${deck.id}/edit`}
                                             onClick={(e) => {
@@ -132,8 +132,8 @@ export default function DeckList() {
                                         </button>
                                     </div>
                                 </div>
-                                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{deck.description || 'No description'}</p>
-                                <div className="flex justify-between items-center text-sm text-gray-500">
+                                <p className="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">{deck.description || 'No description'}</p>
+                                <div className="flex flex-wrap justify-between items-center text-xs sm:text-sm text-gray-500 gap-2">
                                     <div>
                                         {deckStats[deck.id] && (
                                             <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
