@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import { cardService } from '../../services/cardService';
 import { deckService } from '../../services/deckService';
 
@@ -114,20 +115,24 @@ export default function CardList() {
                                     <div className="flex items-center justify-between">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between">
-                                                <p className="text-sm font-medium text-blue-600 truncate">
-                                                    {card.front_content.length > 100
-                                                        ? card.front_content.substring(0, 100) + '...'
-                                                        : card.front_content}
-                                                </p>
+                                                <div className="text-sm font-medium text-blue-600 markdown-content-preview">
+                                                    {card.front_content.length > 100 ? (
+                                                        <ReactMarkdown>{card.front_content.substring(0, 100) + '...'}</ReactMarkdown>
+                                                    ) : (
+                                                        <ReactMarkdown>{card.front_content}</ReactMarkdown>
+                                                    )}
+                                                </div>
                                                 <p className="ml-2 flex-shrink-0 text-sm text-gray-500">
                                                     Reviews: {card.review_count}
                                                 </p>
                                             </div>
-                                            <p className="mt-2 text-sm text-gray-500">
-                                                {card.back_content.length > 100
-                                                    ? card.back_content.substring(0, 100) + '...'
-                                                    : card.back_content}
-                                            </p>
+                                            <div className="mt-2 text-sm text-gray-500 markdown-content-preview">
+                                                {card.back_content.length > 100 ? (
+                                                    <ReactMarkdown>{card.back_content.substring(0, 100) + '...'}</ReactMarkdown>
+                                                ) : (
+                                                    <ReactMarkdown>{card.back_content}</ReactMarkdown>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="ml-5 flex-shrink-0 flex space-x-2">
                                             <Link
@@ -151,8 +156,8 @@ export default function CardList() {
                                     <div className="mt-2 flex justify-between text-sm text-gray-500">
                                         <div>
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${card.success_rate >= 0.8 ? 'bg-green-100 text-green-800' :
-                                                    card.success_rate >= 0.6 ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-red-100 text-red-800'
+                                                card.success_rate >= 0.6 ? 'bg-yellow-100 text-yellow-800' :
+                                                    'bg-red-100 text-red-800'
                                                 }`}>
                                                 {Math.round(card.success_rate * 100)}% success
                                             </span>

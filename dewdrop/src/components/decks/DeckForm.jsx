@@ -5,7 +5,14 @@ import { deckService } from '../../services/deckService';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function DeckForm({ isEditing = false }) {
-    const { id } = useParams();
+    const params = useParams();
+    const { deckId } = params;
+
+    useEffect(() => {
+        if (isEditing && !deckId) {
+            console.error('Edit mode activated but no deckId found in route params');
+        }
+    }, [isEditing, deckId]);
     const navigate = useNavigate();
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
@@ -17,13 +24,20 @@ export default function DeckForm({ isEditing = false }) {
     useEffect(() => {
         // Load existing deck data if editing
         async function loadDeckData() {
-            if (isEditing && id) {
+            if (isEditing && deckId) {
                 try {
                     setLoading(true);
-                    const deck = await deckService.getDeckById(id);
+                    const deck = await deckService.getDeckById(deckId);
+
+                    console.log('Loaded deck data:', deck);
+
+                    if (!deck || !deck.name) {
+                        throw new Error('Invalid deck data received');
+                    }
+
                     reset({
                         name: deck.name,
-                        description: deck.description,
+                        description: deck.description || '',
                         parent_deck_id: deck.parent_deck_id || ''
                     });
                 } catch (err) {
@@ -41,7 +55,7 @@ export default function DeckForm({ isEditing = false }) {
                 const decks = await deckService.getDecks();
                 // Filter out the current deck if editing (to prevent circular references)
                 const potentialParents = isEditing
-                    ? decks.filter(deck => deck.id !== id)
+                    ? decks.filter(deck => deck.id !== deckId)
                     : decks;
                 setParentDecks(potentialParents);
             } catch (err) {
@@ -51,7 +65,7 @@ export default function DeckForm({ isEditing = false }) {
 
         loadDeckData();
         loadParentDecks();
-    }, [isEditing, id, reset]);
+    }, [isEditing, deckId, reset]);
 
     const onSubmit = async (data) => {
         try {
@@ -66,7 +80,11 @@ export default function DeckForm({ isEditing = false }) {
             };
 
             if (isEditing) {
-                await deckService.updateDeck(id, deckData);
+                if (!deckId) {
+                    setError('Deck ID is missing. Please try again or create a new deck.');
+                    return;
+                }
+                await deckService.updateDeck(deckId, deckData);
             } else {
                 await deckService.createDeck(deckData);
             }

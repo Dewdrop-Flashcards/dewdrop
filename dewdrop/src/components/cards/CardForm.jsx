@@ -1,17 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import ReactMarkdown from 'react-markdown';
 import { cardService } from '../../services/cardService';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function CardForm({ isEditing = false }) {
+    const [showFrontPreview, setShowFrontPreview] = useState(false);
+    const [showBackPreview, setShowBackPreview] = useState(false);
     const { deckId, cardId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const { register, handleSubmit, reset, formState: { errors } } = useForm();
+    const { register, handleSubmit, reset, watch, formState: { errors } } = useForm();
+    const frontContent = watch('front_content', '');
+    const backContent = watch('back_content', '');
 
     useEffect(() => {
         // Load existing card data if editing
@@ -85,34 +90,70 @@ export default function CardForm({ isEditing = false }) {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div>
-                    <label htmlFor="front_content" className="block text-sm font-medium text-gray-700">
-                        Front Side
-                    </label>
+                    <div className="flex justify-between items-center">
+                        <label htmlFor="front_content" className="block text-sm font-medium text-gray-700">
+                            Front Side <span className="text-xs text-gray-500">(Supports Markdown)</span>
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => setShowFrontPreview(!showFrontPreview)}
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                            {showFrontPreview ? 'Hide Preview' : 'Show Preview'}
+                        </button>
+                    </div>
                     <textarea
                         id="front_content"
                         {...register('front_content', { required: 'Front content is required' })}
                         rows={4}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
-                        placeholder="Enter the question or prompt for this card"
+                        placeholder="Enter the question or prompt for this card. You can use **bold**, *italic*, and other markdown formatting."
                     />
                     {errors.front_content && (
                         <p className="mt-1 text-sm text-red-600">{errors.front_content.message}</p>
                     )}
+
+                    {showFrontPreview && frontContent && (
+                        <div className="mt-2 p-3 border rounded-md bg-gray-50">
+                            <p className="text-sm font-medium text-gray-700 mb-1">Preview:</p>
+                            <div className="markdown-content p-2 bg-white rounded border">
+                                <ReactMarkdown>{frontContent}</ReactMarkdown>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div>
-                    <label htmlFor="back_content" className="block text-sm font-medium text-gray-700">
-                        Back Side
-                    </label>
+                    <div className="flex justify-between items-center">
+                        <label htmlFor="back_content" className="block text-sm font-medium text-gray-700">
+                            Back Side <span className="text-xs text-gray-500">(Supports Markdown)</span>
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => setShowBackPreview(!showBackPreview)}
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                            {showBackPreview ? 'Hide Preview' : 'Show Preview'}
+                        </button>
+                    </div>
                     <textarea
                         id="back_content"
                         {...register('back_content', { required: 'Back content is required' })}
                         rows={6}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
-                        placeholder="Enter the answer or explanation for this card"
+                        placeholder="Enter the answer or explanation for this card. You can use **bold**, *italic*, # headings, and other markdown formatting."
                     />
                     {errors.back_content && (
                         <p className="mt-1 text-sm text-red-600">{errors.back_content.message}</p>
+                    )}
+
+                    {showBackPreview && backContent && (
+                        <div className="mt-2 p-3 border rounded-md bg-gray-50">
+                            <p className="text-sm font-medium text-gray-700 mb-1">Preview:</p>
+                            <div className="markdown-content p-2 bg-white rounded border">
+                                <ReactMarkdown>{backContent}</ReactMarkdown>
+                            </div>
+                        </div>
                     )}
                 </div>
 

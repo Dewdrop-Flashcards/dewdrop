@@ -50,6 +50,13 @@ export const deckService = {
 
     // Update an existing deck
     async updateDeck(deckId, updates) {
+        if (!deckId) {
+            console.error('updateDeck called with undefined deckId');
+            throw new Error('Deck ID is required for updating a deck');
+        }
+
+        console.log(`Updating deck with ID: ${deckId}`, updates);
+
         const { data, error } = await supabase
             .from('decks')
             .update(updates)
@@ -57,7 +64,11 @@ export const deckService = {
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('Error updating deck:', error);
+            throw error;
+        }
+
         return data;
     },
 

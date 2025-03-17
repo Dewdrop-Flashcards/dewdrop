@@ -6,13 +6,18 @@ const EASE_FACTOR_MODIFY = 0.15;
 const INITIAL_INTERVAL = 1; // days
 
 export const cardService = {
-    // Get all cards for a specific deck
+    // Get all cards for a specific deck (or all decks if deckId is null)
     async getCardsByDeckId(deckId) {
-        const { data, error } = await supabase
+        let query = supabase
             .from('cards')
-            .select('*')
-            .eq('deck_id', deckId)
-            .order('created_at', { ascending: false });
+            .select('*');
+
+        // Only filter by deck_id if a valid deckId is provided
+        if (deckId !== null && deckId !== undefined) {
+            query = query.eq('deck_id', deckId);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) throw error;
         return data;

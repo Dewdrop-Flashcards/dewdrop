@@ -36,7 +36,15 @@ function App() {
               {/* Deck routes */}
               <Route path="/decks" element={<DeckList />} />
               <Route path="/decks/new" element={<DeckForm />} />
-              <Route path="/decks/:deckId/edit" element={<DeckForm isEditing={true} />} />
+              {/* Add debugging info to help track the issue */}
+              <Route
+                path="/decks/:deckId/edit"
+                element={
+                  <div>
+                    <DeckForm isEditing={true} />
+                  </div>
+                }
+              />
               <Route path="/decks/:deckId" element={<CardList />} />
 
               {/* Card routes */}

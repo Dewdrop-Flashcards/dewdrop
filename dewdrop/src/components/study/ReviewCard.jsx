@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 export default function ReviewCard({ card, onRate }) {
     const [isFlipped, setIsFlipped] = useState(false);
@@ -46,8 +47,8 @@ export default function ReviewCard({ card, onRate }) {
                         >
                             <div className="text-center">
                                 <h3 className="text-2xl font-bold mb-4 text-gray-800">Question</h3>
-                                <div className="text-lg text-gray-700 whitespace-pre-wrap overflow-auto max-h-48">
-                                    {card.front_content}
+                                <div className="text-lg text-gray-700 overflow-auto max-h-48 markdown-content">
+                                    <ReactMarkdown>{card.front_content}</ReactMarkdown>
                                 </div>
                             </div>
                             <div className="mt-auto text-center text-sm text-gray-500">
@@ -65,8 +66,8 @@ export default function ReviewCard({ card, onRate }) {
                         >
                             <div className="text-center">
                                 <h3 className="text-2xl font-bold mb-4 text-blue-600">Answer</h3>
-                                <div className="text-lg text-gray-700 whitespace-pre-wrap overflow-auto max-h-48">
-                                    {card.back_content}
+                                <div className="text-lg text-gray-700 overflow-auto max-h-48 markdown-content">
+                                    <ReactMarkdown>{card.back_content}</ReactMarkdown>
                                 </div>
                             </div>
                             {!isDifficultySectionVisible && (

@@ -5,6 +5,7 @@
     "@emotion/styled": "^11.14.0",
     "@supabase/supabase-js": "^2.49.1",
     "framer-motion": "^12.5.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.3.0"
   }
 }

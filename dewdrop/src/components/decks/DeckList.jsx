@@ -101,7 +101,10 @@ export default function DeckList() {
                                     <div className="flex space-x-2">
                                         <Link
                                             to={`/decks/${deck.id}/edit`}
-                                            onClick={(e) => e.stopPropagation()}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                console.log(`Edit link clicked for deck: ${deck.id}`);
+                                            }}
                                             className="text-gray-500 hover:text-blue-500"
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
