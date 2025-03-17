@@ -1,15 +1,33 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { storageService } from '../../services/storageService';
 
-export default function ReviewCard({ card, onRate }) {
+export default function ReviewCard({ card, onRate, isReviewingFailed = false }) {
     const [isFlipped, setIsFlipped] = useState(false);
     const [isDifficultySectionVisible, setIsDifficultySectionVisible] = useState(false);
+    const [frontImageUrl, setFrontImageUrl] = useState(null);
+    const [backImageUrl, setBackImageUrl] = useState(null);
+
+    // Process image URLs when card loads or changes
+    useEffect(() => {
+        // Extract the display URLs from the stored URL+path format
+        if (card.front_image_url) {
+            setFrontImageUrl(storageService.getDisplayUrl(card.front_image_url));
+        } else {
+            setFrontImageUrl(null);
+        }
+
+        if (card.back_image_url) {
+            setBackImageUrl(storageService.getDisplayUrl(card.back_image_url));
+        } else {
+            setBackImageUrl(null);
+        }
+    }, [card]);
 
     const handleFlip = () => {
         if (!isFlipped) {
             setIsFlipped(true);
-        } else {
             setIsDifficultySectionVisible(true);
         }
     };
@@ -22,6 +40,16 @@ export default function ReviewCard({ card, onRate }) {
 
     return (
         <div className="w-full max-w-3xl mx-auto">
+            {isReviewingFailed && (
+                <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded-md">
+                    <p className="text-sm text-orange-600 font-medium flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Reviewing card you failed earlier
+                    </p>
+                </div>
+            )}
             <div className="mb-3 sm:mb-4 flex justify-between items-center">
                 <span className="text-xs sm:text-sm text-gray-500">
                     Review count: {card.review_count}
@@ -32,7 +60,7 @@ export default function ReviewCard({ card, onRate }) {
             </div>
 
             <div
-                className="relative w-full h-64 sm:h-80 cursor-pointer perspective-1000"
+                className={`relative w-full h-64 sm:h-80 cursor-pointer perspective-1000 ${isReviewingFailed ? 'border-2 border-orange-300 rounded-lg' : ''}`}
                 onClick={handleFlip}
             >
                 <AnimatePresence initial={false} mode="wait">
@@ -43,10 +71,19 @@ export default function ReviewCard({ card, onRate }) {
                             initial={{ rotateY: 180, opacity: 0 }}
                             animate={{ rotateY: 0, opacity: 1 }}
                             exit={{ rotateY: 180, opacity: 0 }}
-                            transition={{ duration: 0.5 }}
+                            transition={{ duration: 0.05 }}
                         >
                             <div className="text-center">
                                 <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4 text-gray-800">Question</h3>
+                                {frontImageUrl && (
+                                    <div className="mb-3 flex justify-center">
+                                        <img
+                                            src={frontImageUrl}
+                                            alt="Front card image"
+                                            className="max-h-32 max-w-full rounded-md object-contain"
+                                        />
+                                    </div>
+                                )}
                                 <div className="text-base sm:text-lg text-gray-700 overflow-auto max-h-36 sm:max-h-48 markdown-content">
                                     <ReactMarkdown>{card.front_content}</ReactMarkdown>
                                 </div>
@@ -62,19 +99,23 @@ export default function ReviewCard({ card, onRate }) {
                             initial={{ rotateY: -180, opacity: 0 }}
                             animate={{ rotateY: 0, opacity: 1 }}
                             exit={{ rotateY: -180, opacity: 0 }}
-                            transition={{ duration: 0.5 }}
+                            transition={{ duration: 0.05 }}
                         >
                             <div className="text-center">
                                 <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4 text-blue-600">Answer</h3>
+                                {backImageUrl && (
+                                    <div className="mb-3 flex justify-center">
+                                        <img
+                                            src={backImageUrl}
+                                            alt="Back card image"
+                                            className="max-h-32 max-w-full rounded-md object-contain"
+                                        />
+                                    </div>
+                                )}
                                 <div className="text-base sm:text-lg text-gray-700 overflow-auto max-h-36 sm:max-h-48 markdown-content">
                                     <ReactMarkdown>{card.back_content}</ReactMarkdown>
                                 </div>
                             </div>
-                            {!isDifficultySectionVisible && (
-                                <div className="mt-auto text-center text-sm text-gray-500">
-                                    Click to rate your performance
-                                </div>
-                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>

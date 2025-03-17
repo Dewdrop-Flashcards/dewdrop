@@ -1,13 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import ReactMarkdown from 'react-markdown';
 import { cardService } from '../../services/cardService';
+import { storageService } from '../../services/storageService';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function CardForm({ isEditing = false }) {
     const [showFrontPreview, setShowFrontPreview] = useState(false);
     const [showBackPreview, setShowBackPreview] = useState(false);
+    const [frontImage, setFrontImage] = useState(null);
+    const [backImage, setBackImage] = useState(null);
+    const [frontImagePreview, setFrontImagePreview] = useState(null);
+    const [backImagePreview, setBackImagePreview] = useState(null);
+    const [existingFrontImage, setExistingFrontImage] = useState(null);
+    const [existingBackImage, setExistingBackImage] = useState(null);
+    const frontImageInputRef = useRef(null);
+    const backImageInputRef = useRef(null);
+
     const { deckId, cardId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -17,6 +27,41 @@ export default function CardForm({ isEditing = false }) {
     const { register, handleSubmit, reset, watch, formState: { errors } } = useForm();
     const frontContent = watch('front_content', '');
     const backContent = watch('back_content', '');
+
+    // Handle image file selection
+    const handleImageChange = (side, event) => {
+        if (!event.target.files || event.target.files.length === 0) {
+            side === 'front' ? setFrontImage(null) : setBackImage(null);
+            side === 'front' ? setFrontImagePreview(null) : setBackImagePreview(null);
+            return;
+        }
+
+        const selectedFile = event.target.files[0];
+        if (side === 'front') {
+            setFrontImage(selectedFile);
+            const preview = URL.createObjectURL(selectedFile);
+            setFrontImagePreview(preview);
+        } else {
+            setBackImage(selectedFile);
+            const preview = URL.createObjectURL(selectedFile);
+            setBackImagePreview(preview);
+        }
+    };
+
+    // Remove selected image
+    const handleRemoveImage = (side) => {
+        if (side === 'front') {
+            setFrontImage(null);
+            setFrontImagePreview(null);
+            setExistingFrontImage(null);
+            if (frontImageInputRef.current) frontImageInputRef.current.value = '';
+        } else {
+            setBackImage(null);
+            setBackImagePreview(null);
+            setExistingBackImage(null);
+            if (backImageInputRef.current) backImageInputRef.current.value = '';
+        }
+    };
 
     useEffect(() => {
         // Load existing card data if editing
@@ -29,6 +74,17 @@ export default function CardForm({ isEditing = false }) {
                         front_content: card.front_content,
                         back_content: card.back_content
                     });
+
+                    // Set existing image URLs if available
+                    if (card.front_image_url) {
+                        // Get the display URL from the stored URL+path
+                        setExistingFrontImage(storageService.getDisplayUrl(card.front_image_url));
+                    }
+
+                    if (card.back_image_url) {
+                        // Get the display URL from the stored URL+path
+                        setExistingBackImage(storageService.getDisplayUrl(card.back_image_url));
+                    }
                 } catch (err) {
                     console.error('Error loading card:', err);
                     setError('Failed to load card data. Please try again.');
@@ -39,6 +95,12 @@ export default function CardForm({ isEditing = false }) {
         }
 
         loadCardData();
+
+        // Clean up object URLs on unmount
+        return () => {
+            if (frontImagePreview) URL.revokeObjectURL(frontImagePreview);
+            if (backImagePreview) URL.revokeObjectURL(backImagePreview);
+        };
     }, [isEditing, cardId, reset]);
 
     const onSubmit = async (data) => {
@@ -53,10 +115,18 @@ export default function CardForm({ isEditing = false }) {
                 user_id: user.id
             };
 
+            // If editing and an image was previously removed, explicitly set it to null
             if (isEditing) {
-                await cardService.updateCard(cardId, cardData);
+                if (existingFrontImage && !frontImage && !frontImagePreview) {
+                    cardData.front_image_url = null;
+                }
+                if (existingBackImage && !backImage && !backImagePreview) {
+                    cardData.back_image_url = null;
+                }
+
+                await cardService.updateCard(cardId, cardData, frontImage, backImage);
             } else {
-                await cardService.createCard(cardData);
+                await cardService.createCard(cardData, frontImage, backImage);
             }
 
             navigate(`/decks/${deckId}`);
@@ -113,9 +183,53 @@ export default function CardForm({ isEditing = false }) {
                         <p className="mt-1 text-sm text-red-600">{errors.front_content.message}</p>
                     )}
 
+                    {/* Front Image Upload */}
+                    <div className="mt-3">
+                        <label htmlFor="front_image" className="block text-sm font-medium text-gray-700">
+                            Front Image <span className="text-xs text-gray-500">(Optional)</span>
+                        </label>
+                        <div className="mt-1 flex items-center space-x-2">
+                            <input
+                                type="file"
+                                id="front_image"
+                                accept="image/*"
+                                ref={frontImageInputRef}
+                                onChange={(e) => handleImageChange('front', e)}
+                                className="block w-full text-sm text-gray-500 
+                                           file:mr-4 file:py-2 file:px-4
+                                           file:rounded-md file:border-0
+                                           file:text-sm file:font-semibold
+                                           file:bg-blue-50 file:text-blue-700
+                                           hover:file:bg-blue-100"
+                            />
+                            {(frontImagePreview || existingFrontImage) && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveImage('front')}
+                                    className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none"
+                                >
+                                    Remove
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Front Image Preview */}
+                        {(frontImagePreview || existingFrontImage) && (
+                            <div className="mt-2 p-2 border rounded">
+                                <p className="text-xs text-gray-500 mb-1">Image Preview:</p>
+                                <img
+                                    src={frontImagePreview || existingFrontImage}
+                                    alt="Front side preview"
+                                    className="max-h-40 max-w-full rounded"
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Content Preview */}
                     {showFrontPreview && frontContent && (
                         <div className="mt-2 p-3 border rounded-md bg-gray-50">
-                            <p className="text-sm font-medium text-gray-700 mb-1">Preview:</p>
+                            <p className="text-sm font-medium text-gray-700 mb-1">Content Preview:</p>
                             <div className="markdown-content p-2 bg-white rounded border">
                                 <ReactMarkdown>{frontContent}</ReactMarkdown>
                             </div>
@@ -147,9 +261,53 @@ export default function CardForm({ isEditing = false }) {
                         <p className="mt-1 text-sm text-red-600">{errors.back_content.message}</p>
                     )}
 
+                    {/* Back Image Upload */}
+                    <div className="mt-3">
+                        <label htmlFor="back_image" className="block text-sm font-medium text-gray-700">
+                            Back Image <span className="text-xs text-gray-500">(Optional)</span>
+                        </label>
+                        <div className="mt-1 flex items-center space-x-2">
+                            <input
+                                type="file"
+                                id="back_image"
+                                accept="image/*"
+                                ref={backImageInputRef}
+                                onChange={(e) => handleImageChange('back', e)}
+                                className="block w-full text-sm text-gray-500 
+                                           file:mr-4 file:py-2 file:px-4
+                                           file:rounded-md file:border-0
+                                           file:text-sm file:font-semibold
+                                           file:bg-blue-50 file:text-blue-700
+                                           hover:file:bg-blue-100"
+                            />
+                            {(backImagePreview || existingBackImage) && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveImage('back')}
+                                    className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none"
+                                >
+                                    Remove
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Back Image Preview */}
+                        {(backImagePreview || existingBackImage) && (
+                            <div className="mt-2 p-2 border rounded">
+                                <p className="text-xs text-gray-500 mb-1">Image Preview:</p>
+                                <img
+                                    src={backImagePreview || existingBackImage}
+                                    alt="Back side preview"
+                                    className="max-h-40 max-w-full rounded"
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Content Preview */}
                     {showBackPreview && backContent && (
                         <div className="mt-2 p-3 border rounded-md bg-gray-50">
-                            <p className="text-sm font-medium text-gray-700 mb-1">Preview:</p>
+                            <p className="text-sm font-medium text-gray-700 mb-1">Content Preview:</p>
                             <div className="markdown-content p-2 bg-white rounded border">
                                 <ReactMarkdown>{backContent}</ReactMarkdown>
                             </div>

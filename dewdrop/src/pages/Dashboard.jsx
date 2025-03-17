@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cardService } from '../services/cardService';
 import { deckService } from '../services/deckService';
+import { statisticsService } from '../services/statisticsService';
 
 export default function Dashboard() {
     const [loading, setLoading] = useState(true);
@@ -26,6 +27,14 @@ export default function Dashboard() {
                 // Get all due cards
                 const dueCardsData = await cardService.getDueCards();
 
+                // Get reviews by date to calculate studied today
+                const reviewsByDate = await statisticsService.getReviewsByDate('week');
+
+                // Find today's reviews if they exist
+                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+                const todayStats = reviewsByDate.find(day => day.date === today);
+                const studiedToday = todayStats ? todayStats.total : 0;
+
                 // Calculate dashboard stats
                 let totalCards = 0;
 
@@ -39,7 +48,7 @@ export default function Dashboard() {
                     totalDecks: decksData.length,
                     totalCards: totalCards,
                     dueCards: dueCardsData.length,
-                    recentlyStudied: 0 // This would need an actual API call to get recent activity
+                    recentlyStudied: studiedToday
                 });
             } catch (err) {
                 console.error('Error loading dashboard data:', err);

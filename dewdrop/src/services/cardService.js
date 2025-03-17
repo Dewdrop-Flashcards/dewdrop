@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { storageService } from './storageService';
 
 // SM-2 algorithm constants
 const MIN_EASE_FACTOR = 1.3;
@@ -54,10 +55,24 @@ export const cardService = {
     },
 
     // Create a new card
-    async createCard(card) {
+    async createCard(card, frontImageFile = null, backImageFile = null) {
+        // Handle image uploads if provided
+        let frontImageUrl = null;
+        let backImageUrl = null;
+
+        if (frontImageFile) {
+            frontImageUrl = await storageService.uploadCardImage(frontImageFile, card.user_id);
+        }
+
+        if (backImageFile) {
+            backImageUrl = await storageService.uploadCardImage(backImageFile, card.user_id);
+        }
+
         // Ensure we have the required next_review_date field
         const cardWithDefaults = {
             ...card,
+            front_image_url: frontImageUrl,
+            back_image_url: backImageUrl,
             next_review_date: card.next_review_date || new Date().toISOString(),
             interval: card.interval || 0,
             ease_factor: card.ease_factor || 2.5,
@@ -71,15 +86,54 @@ export const cardService = {
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            // Clean up uploaded images if there was an error
+            if (frontImageUrl) await storageService.deleteCardImage(frontImageUrl);
+            if (backImageUrl) await storageService.deleteCardImage(backImageUrl);
+            throw error;
+        }
+
         return data;
     },
 
     // Update an existing card
-    async updateCard(cardId, updates) {
+    async updateCard(cardId, updates, frontImageFile = null, backImageFile = null) {
+        // Get the current card to check for existing images
+        const currentCard = await this.getCardById(cardId);
+        const updatedCard = { ...updates };
+
+        // Handle front image if provided or requested to remove
+        if (frontImageFile) {
+            // Upload new image and get URL
+            updatedCard.front_image_url = await storageService.uploadCardImage(
+                frontImageFile,
+                updates.user_id || currentCard.user_id,
+                currentCard.front_image_url
+            );
+        } else if (updates.front_image_url === null && currentCard.front_image_url) {
+            // User requested to remove the front image
+            await storageService.deleteCardImage(currentCard.front_image_url);
+            updatedCard.front_image_url = null;
+        }
+
+        // Handle back image if provided or requested to remove
+        if (backImageFile) {
+            // Upload new image and get URL
+            updatedCard.back_image_url = await storageService.uploadCardImage(
+                backImageFile,
+                updates.user_id || currentCard.user_id,
+                currentCard.back_image_url
+            );
+        } else if (updates.back_image_url === null && currentCard.back_image_url) {
+            // User requested to remove the back image
+            await storageService.deleteCardImage(currentCard.back_image_url);
+            updatedCard.back_image_url = null;
+        }
+
+        // Update the card in the database
         const { data, error } = await supabase
             .from('cards')
-            .update(updates)
+            .update(updatedCard)
             .eq('id', cardId)
             .select()
             .single();
@@ -90,12 +144,26 @@ export const cardService = {
 
     // Delete a card
     async deleteCard(cardId) {
+        // Get the card to access image URLs before deletion
+        const card = await this.getCardById(cardId);
+
+        // Delete the card from the database
         const { error } = await supabase
             .from('cards')
             .delete()
             .eq('id', cardId);
 
         if (error) throw error;
+
+        // Clean up associated images
+        if (card.front_image_url) {
+            await storageService.deleteCardImage(card.front_image_url);
+        }
+
+        if (card.back_image_url) {
+            await storageService.deleteCardImage(card.back_image_url);
+        }
+
         return true;
     },
 

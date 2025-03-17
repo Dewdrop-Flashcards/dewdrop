@@ -12,6 +12,8 @@ export default function StudySession() {
     const [deck, setDeck] = useState(null);
     const [cards, setCards] = useState([]);
     const [currentCardIndex, setCurrentCardIndex] = useState(0);
+    const [failedCards, setFailedCards] = useState([]);
+    const [reviewingFailedCards, setReviewingFailedCards] = useState(false);
     const [sessionStats, setSessionStats] = useState({
         total: 0,
         correct: 0,
@@ -105,14 +107,43 @@ export default function StudySession() {
                 incorrect: performanceScore < 3 ? prev.incorrect + 1 : prev.incorrect
             }));
 
-            // Move to the next card or complete the session
+            // If failed (score = 0), add to failedCards for later review
+            if (performanceScore === 0) {
+                const currentCard = cards[currentCardIndex];
+                // Add to failedCards if not already there
+                setFailedCards(prev => {
+                    if (!prev.some(card => card.id === currentCard.id)) {
+                        return [...prev, currentCard];
+                    }
+                    return prev;
+                });
+            }
+
+            // Move to the next card or process failedCards or complete the session
             if (currentCardIndex < cards.length - 1) {
                 setCurrentCardIndex(currentCardIndex + 1);
+            } else if (failedCards.length > 0) {
+                // If we've reached the end but have failed cards, process them
+                const failedCardsCopy = [...failedCards];
+                setFailedCards([]); // Clear failed cards as we're about to add them
+
+                // Get the current length before updating cards
+                const startReviewingAtIndex = cards.length;
+
+                // Update the cards array with failed cards
+                setCards(prevCards => [...prevCards, ...failedCardsCopy]);
+
+                // Set the current index to the start of the failed cards section
+                setCurrentCardIndex(startReviewingAtIndex);
+
+                // Mark that we're now reviewing failed cards
+                setReviewingFailedCards(true);
             } else {
                 setSessionStats(prev => ({
                     ...prev,
                     completed: true
                 }));
+                setReviewingFailedCards(false);
             }
         } catch (err) {
             console.error('Error recording review:', err);
@@ -241,6 +272,11 @@ export default function StudySession() {
                     </div>
                     <div className="text-xs sm:text-sm text-gray-500">
                         Card {currentCardIndex + 1} of {cards.length}
+                        {failedCards.length > 0 && (
+                            <span className="ml-2 text-orange-500">
+                                ({failedCards.length} failed card{failedCards.length > 1 ? 's' : ''} to review)
+                            </span>
+                        )}
                     </div>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 mb-3 sm:mb-4">
@@ -254,6 +290,7 @@ export default function StudySession() {
             <ReviewCard
                 card={currentCard}
                 onRate={handleCardRated}
+                isReviewingFailed={reviewingFailedCards && currentCardIndex >= cards.length - failedCards.length}
             />
         </div>
     );
