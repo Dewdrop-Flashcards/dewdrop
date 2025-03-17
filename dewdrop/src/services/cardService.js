@@ -111,6 +111,7 @@ export const cardService = {
             performance_score: performanceScore,
             time_taken: timeTaken,
             success: performanceScore >= 3, // 0-2 is fail, 3-5 is success
+            user_id: card.user_id // Include the user_id for RLS
         };
 
         const { error: reviewError } = await supabase
