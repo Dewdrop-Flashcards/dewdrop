@@ -50,9 +50,19 @@ export const cardService = {
 
     // Create a new card
     async createCard(card) {
+        // Ensure we have the required next_review_date field
+        const cardWithDefaults = {
+            ...card,
+            next_review_date: card.next_review_date || new Date().toISOString(),
+            interval: card.interval || 0,
+            ease_factor: card.ease_factor || 2.5,
+            review_count: card.review_count || 0,
+            success_rate: card.success_rate || 0
+        };
+
         const { data, error } = await supabase
             .from('cards')
-            .insert(card)
+            .insert(cardWithDefaults)
             .select()
             .single();
 
