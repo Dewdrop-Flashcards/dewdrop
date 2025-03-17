@@ -139,3 +139,35 @@ body {
   border-top: 1px solid #e5e7eb;
   margin: 1rem 0;
 }
+
+/* Statistics page styles */
+.tooltip-container {
+  position: relative;
+}
+
+.tooltip-container:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+  z-index: 50;
+}
+
+.tooltip {
+  position: absolute;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Stats responsive adjustments */
+@media (max-width: 768px) {
+  .tooltip {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.3rem;
+  }
+
+  .chart-label {
+    font-size: 0.65rem;
+  }
+}

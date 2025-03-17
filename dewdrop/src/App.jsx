@@ -17,8 +17,9 @@ import CardList from './components/cards/CardList';
 import CardForm from './components/cards/CardForm';
 import StudySession from './components/study/StudySession';
 
-// Placeholder pages for future implementation
-const Stats = () => <div className="p-6"><h1 className="text-3xl font-bold mb-4">Statistics</h1><p>Statistics feature coming soon!</p></div>;
+// Import statistics page
+import Statistics from './pages/Statistics';
+// Placeholder page for future implementation
 const Settings = () => <div className="p-6"><h1 className="text-3xl font-bold mb-4">Settings</h1><p>Settings feature coming soon!</p></div>;
 
 function App() {
@@ -58,7 +59,7 @@ function App() {
               <Route path="/decks/:deckId/study" element={<StudySession />} />
 
               {/* Stats and settings */}
-              <Route path="/stats" element={<Stats />} />
+              <Route path="/stats" element={<Statistics />} />
               <Route path="/settings" element={<Settings />} />
 
               {/* Default redirect */}
