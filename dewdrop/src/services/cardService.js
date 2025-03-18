@@ -1,12 +1,94 @@
 import { supabase } from '../lib/supabaseClient';
 import { storageService } from './storageService';
 
+// Default limit for new cards per day per deck
+const DEFAULT_NEW_CARDS_PER_DAY = 10;
+
 // SM-2 algorithm constants
 const MIN_EASE_FACTOR = 1.3;
 const EASE_FACTOR_MODIFY = 0.15;
 const INITIAL_INTERVAL = 1; // days
 
+// Helper for tracking new cards shown per day per deck
+const getNewCardsKey = (deckId) => {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    return `dewdrop_new_cards_${today}_${deckId || 'all'}`;
+};
+
 export const cardService = {
+    // Expose the daily new card limit as a property
+    NEW_CARDS_PER_DAY: DEFAULT_NEW_CARDS_PER_DAY,
+
+    // Get the number of new cards already shown today for a deck
+    getNewCardsShownToday(deckId = null) {
+        const key = getNewCardsKey(deckId);
+        const count = localStorage.getItem(key);
+        return count ? parseInt(count, 10) : 0;
+    },
+
+    // Set the number of new cards shown today for a deck
+    setNewCardsShownToday(count, deckId = null) {
+        const key = getNewCardsKey(deckId);
+        localStorage.setItem(key, count.toString());
+    },
+
+    // Increment the count of new cards shown today for a deck
+    incrementNewCardsShownToday(deckId = null) {
+        const currentCount = this.getNewCardsShownToday(deckId);
+        this.setNewCardsShownToday(currentCount + 1, deckId);
+        return currentCount + 1;
+    },
+
+    // Get a combination of review cards and new cards for study, respecting the daily new card limit
+    async getCardsForStudy(deckId = null, newCardsPerDay = DEFAULT_NEW_CARDS_PER_DAY) {
+        // Get the number of new cards already shown today
+        const newCardsShown = this.getNewCardsShownToday(deckId);
+
+        // How many new cards we can still show today
+        const newCardsRemaining = Math.max(0, newCardsPerDay - newCardsShown);
+
+        // Get due review cards (cards with review_count > 0 that are due today)
+        let reviewQuery = supabase
+            .from('cards')
+            .select('*')
+            .lte('next_review_date', new Date().toISOString())
+            .gt('review_count', 0);
+
+        // If deckId is provided, filter by deck
+        if (deckId !== null && deckId !== undefined) {
+            reviewQuery = reviewQuery.eq('deck_id', deckId);
+        }
+
+        const { data: reviewCards, error: reviewError } = await reviewQuery.order('next_review_date', { ascending: true });
+
+        if (reviewError) throw reviewError;
+
+        // If we can't show any more new cards today, just return review cards
+        if (newCardsRemaining <= 0) {
+            return reviewCards;
+        }
+
+        // Get new cards (never reviewed before)
+        let newQuery = supabase
+            .from('cards')
+            .select('*')
+            .eq('review_count', 0);
+
+        // If deckId is provided, filter by deck
+        if (deckId !== null && deckId !== undefined) {
+            newQuery = newQuery.eq('deck_id', deckId);
+        }
+
+        const { data: allNewCards, error: newError } = await newQuery.order('created_at', { ascending: false });
+
+        if (newError) throw newError;
+
+        // Only take up to the remaining limit of new cards
+        const newCards = allNewCards.slice(0, newCardsRemaining);
+
+        // Return a combination of review cards and new cards
+        return [...reviewCards, ...newCards];
+    },
     // Get all cards for a specific deck (or all decks if deckId is null)
     async getCardsByDeckId(deckId) {
         let query = supabase

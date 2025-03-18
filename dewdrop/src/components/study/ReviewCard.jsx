@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { storageService } from '../../services/storageService';
 
-export default function ReviewCard({ card, onRate, isReviewingFailed = false }) {
+export default function ReviewCard({ card, onRate, isReviewingFailed = false, isNew = false }) {
     const [isFlipped, setIsFlipped] = useState(false);
     const [isDifficultySectionVisible, setIsDifficultySectionVisible] = useState(false);
     const [frontImageUrl, setFrontImageUrl] = useState(null);
@@ -47,6 +47,16 @@ export default function ReviewCard({ card, onRate, isReviewingFailed = false }) 
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                         Reviewing card you failed earlier
+                    </p>
+                </div>
+            )}
+            {isNew && (
+                <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-sm text-green-600 font-medium flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        New card
                     </p>
                 </div>
             )}

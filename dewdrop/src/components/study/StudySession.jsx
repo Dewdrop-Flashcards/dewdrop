@@ -21,6 +21,7 @@ export default function StudySession() {
         completed: false
     });
     const [cramMode, setCramMode] = useState(false);
+    const [newCardsRemaining, setNewCardsRemaining] = useState(0);
 
     useEffect(() => {
         async function loadData() {
@@ -33,10 +34,19 @@ export default function StudySession() {
                     setDeck(deckData);
                 }
 
-                // Load cards due for review
+                // Get the daily new card limit and how many have been shown today
+                const newCardsShown = deckId
+                    ? cardService.getNewCardsShownToday(deckId)
+                    : cardService.getNewCardsShownToday();
+
+                const newCardLimit = cardService.NEW_CARDS_PER_DAY;
+                const remaining = Math.max(0, newCardLimit - newCardsShown);
+                setNewCardsRemaining(remaining);
+
+                // Load cards for review, combining due cards and new cards with a limit
                 const cardsData = deckId
-                    ? await cardService.getDueCards(deckId)
-                    : await cardService.getDueCards();
+                    ? await cardService.getCardsForStudy(deckId)
+                    : await cardService.getCardsForStudy();
 
                 if (cardsData.length === 0) {
                     setCards([]);
@@ -63,11 +73,11 @@ export default function StudySession() {
             setLoading(true);
             setCramMode(!cramMode);
 
-            // If turning on cram mode, load all cards regardless of due date
+            // If turning on cram mode, load all cards regardless of due date and limits
             if (!cramMode) {
                 const allCards = deckId
                     ? await cardService.getCardsByDeckId(deckId)
-                    : await cardService.getCardsByDeckId(null); // This would need to be implemented to get all cards
+                    : await cardService.getCardsByDeckId(null);
 
                 setCards(allCards);
                 setSessionStats(prev => ({
@@ -75,15 +85,15 @@ export default function StudySession() {
                     total: allCards.length
                 }));
             } else {
-                // If turning off cram mode, load only due cards
-                const dueCards = deckId
-                    ? await cardService.getDueCards(deckId)
-                    : await cardService.getDueCards();
+                // If turning off cram mode, load only due cards respecting new card limits
+                const studyCards = deckId
+                    ? await cardService.getCardsForStudy(deckId)
+                    : await cardService.getCardsForStudy();
 
-                setCards(dueCards);
+                setCards(studyCards);
                 setSessionStats(prev => ({
                     ...prev,
-                    total: dueCards.length
+                    total: studyCards.length
                 }));
             }
         } catch (err) {
@@ -96,9 +106,18 @@ export default function StudySession() {
 
     const handleCardRated = async (cardId, performanceScore) => {
         try {
+            // Get the current card to check if it's new
+            const currentCard = cards[currentCardIndex];
+            const isNewCard = currentCard.review_count === 0;
+
             // Record the review
             const timeTaken = 0; // Would need to add timing functionality
             await cardService.recordReview(cardId, performanceScore, timeTaken);
+
+            // If this was a new card, increment the counter for today
+            if (isNewCard && !cramMode) {
+                cardService.incrementNewCardsShownToday(deckId);
+            }
 
             // Update stats
             setSessionStats(prev => ({
@@ -264,11 +283,18 @@ export default function StudySession() {
                         <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
                             {deck ? deck.name : 'Study Session'}
                         </h2>
-                        {cramMode && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs sm:text-sm font-medium bg-yellow-100 text-yellow-800 mt-1 sm:mt-0 sm:ml-2">
-                                Cram Mode
-                            </span>
-                        )}
+                        <div className="flex flex-wrap gap-2 mt-1 sm:mt-0">
+                            {cramMode && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs sm:text-sm font-medium bg-yellow-100 text-yellow-800">
+                                    Cram Mode
+                                </span>
+                            )}
+                            {!cramMode && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs sm:text-sm font-medium bg-blue-100 text-blue-800">
+                                    {newCardsRemaining} new card{newCardsRemaining !== 1 ? 's' : ''} remaining today
+                                </span>
+                            )}
+                        </div>
                     </div>
                     <div className="text-xs sm:text-sm text-gray-500">
                         Card {currentCardIndex + 1} of {cards.length}
@@ -291,6 +317,7 @@ export default function StudySession() {
                 card={currentCard}
                 onRate={handleCardRated}
                 isReviewingFailed={reviewingFailedCards && currentCardIndex >= cards.length - failedCards.length}
+                isNew={currentCard.review_count === 0}
             />
         </div>
     );
