@@ -26,10 +26,17 @@ export function AuthProvider({ children }) {
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (_event, session) => {
+            (event, session) => {
+                // Set session and user data
                 setSession(session);
                 setUser(session?.user ?? null);
                 setLoading(false);
+                
+                // Handle password recovery event
+                if (event === 'PASSWORD_RECOVERY') {
+                    console.log('Password recovery event detected');
+                    // The password recovery flow is handled in the PasswordReset component
+                }
             }
         );
 
@@ -60,6 +67,9 @@ export function AuthProvider({ children }) {
             // If sign-in succeeds, update to the new password
             return supabase.auth.updateUser({ password: newPassword });
         },
+        resetPassword: (email) => supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/auth/reset-password?recovery=true`,
+        }),
     };
 
     return (

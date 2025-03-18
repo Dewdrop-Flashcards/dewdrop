@@ -4,6 +4,8 @@ import { AuthProvider } from './contexts/AuthContext';
 // Auth components
 import Auth from './pages/Auth';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import PasswordResetRequest from './components/auth/PasswordResetRequest';
+import PasswordReset from './components/auth/PasswordReset';
 
 // Layout
 import MainLayout from './components/ui/MainLayout';
@@ -28,6 +30,8 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/request-reset" element={<PasswordResetRequest />} />
+          <Route path="/auth/reset-password" element={<PasswordReset />} />
 
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>

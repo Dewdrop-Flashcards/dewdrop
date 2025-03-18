@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 
@@ -56,7 +57,7 @@ export default function LoginForm({ onSuccess }) {
                     {errors.password && <p className="text-red-500 text-xs italic">{errors.password.message}</p>}
                 </div>
                 {error && <div className="mb-4 text-red-500 text-sm">{error}</div>}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col space-y-4">
                     <button
                         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                         type="submit"
@@ -64,6 +65,15 @@ export default function LoginForm({ onSuccess }) {
                     >
                         {loading ? 'Logging in...' : 'Sign In'}
                     </button>
+                    
+                    <div className="text-center">
+                        <Link 
+                            to="/auth/request-reset" 
+                            className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+                        >
+                            Forgot Password?
+                        </Link>
+                    </div>
                 </div>
             </form>
         </div>
