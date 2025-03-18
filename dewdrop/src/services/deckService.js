@@ -72,14 +72,18 @@ export const deckService = {
         return data;
     },
 
-    // Delete a deck
+    // Delete a deck and all its associated cards
     async deleteDeck(deckId) {
-        const { error } = await supabase
-            .from('decks')
-            .delete()
-            .eq('id', deckId);
+        // Call the delete_deck_and_cards function
+        const { data, error } = await supabase.rpc('delete_deck_and_cards', {
+            input_deck_id: deckId
+        });
 
-        if (error) throw error;
-        return true;
+        if (error) {
+            console.error('Error deleting deck and cards:', error);
+            throw error;
+        }
+
+        return data;
     }
 };

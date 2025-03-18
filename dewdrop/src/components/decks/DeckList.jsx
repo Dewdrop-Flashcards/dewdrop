@@ -41,16 +41,22 @@ export default function DeckList() {
         e.preventDefault();
         e.stopPropagation();
 
-        if (!confirm('Are you sure you want to delete this deck? This will also delete all cards in the deck.')) {
+        if (!confirm('Are you sure you want to delete this deck? This action will permanently delete the deck and all its associated cards.')) {
             return;
         }
 
         try {
-            await deckService.deleteDeck(deckId);
-            setDecks(decks.filter(deck => deck.id !== deckId));
+            const result = await deckService.deleteDeck(deckId);
+            if (result) {
+                setDecks(decks.filter(deck => deck.id !== deckId));
+                // Clear the error state if the operation was successful
+                setError(null);
+            } else {
+                setError('Failed to delete the deck. The deck may not exist or you may not have permission to delete it.');
+            }
         } catch (err) {
             console.error('Error deleting deck:', err);
-            setError('Failed to delete deck. Please try again.');
+            setError(`Failed to delete deck: ${err.message || 'Unknown error occurred'}. Please try again.`);
         }
     }
 
