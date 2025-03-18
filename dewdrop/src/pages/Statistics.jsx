@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { statisticsService } from '../services/statisticsService';
+import ActivityHeatMap from '../components/statistics/ActivityHeatMap';
 
 function Statistics() {
     const [stats, setStats] = useState({
         overall: null,
         reviewsByDate: [],
         performanceDistribution: [],
-        recentReviews: []
+        recentReviews: [],
+        studyActivity: []
     });
     const [timeFrame, setTimeFrame] = useState('week');
     const [loading, setLoading] = useState(true);
@@ -18,18 +20,20 @@ function Statistics() {
                 setLoading(true);
 
                 // Load all stats in parallel
-                const [overall, reviewsByDate, performanceDistribution, recentReviews] = await Promise.all([
+                const [overall, reviewsByDate, performanceDistribution, recentReviews, studyActivity] = await Promise.all([
                     statisticsService.getOverallStats(),
                     statisticsService.getReviewsByDate(timeFrame),
                     statisticsService.getPerformanceDistribution(),
-                    statisticsService.getRecentReviews(10)
+                    statisticsService.getRecentReviews(10),
+                    statisticsService.getStudyActivity(timeFrame)
                 ]);
 
                 setStats({
                     overall,
                     reviewsByDate,
                     performanceDistribution,
-                    recentReviews
+                    recentReviews,
+                    studyActivity
                 });
 
                 setError(null);
@@ -112,6 +116,44 @@ function Statistics() {
                     <h3 className="text-sm font-medium text-gray-500 mb-1">Total Study Time</h3>
                     <p className="text-3xl font-bold">{formatTime(stats.overall?.totalStudyTime || 0)}</p>
                 </div>
+            </div>
+
+            {/* Study Activity Heat Map */}
+            <div className="bg-white rounded-lg shadow p-6 mb-8">
+                <div className="flex flex-wrap justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold">Study Activity</h2>
+                    <div className="flex space-x-2 text-sm">
+                        <button
+                            onClick={() => setTimeFrame('week')}
+                            className={`px-3 py-1 rounded ${timeFrame === 'week' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                        >
+                            Week
+                        </button>
+                        <button
+                            onClick={() => setTimeFrame('month')}
+                            className={`px-3 py-1 rounded ${timeFrame === 'month' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                        >
+                            Month
+                        </button>
+                        <button
+                            onClick={() => setTimeFrame('year')}
+                            className={`px-3 py-1 rounded ${timeFrame === 'year' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                        >
+                            Year
+                        </button>
+                    </div>
+                </div>
+
+                {stats.studyActivity.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                        No study activity data available for this time period
+                    </div>
+                ) : (
+                    <ActivityHeatMap
+                        activityData={stats.studyActivity}
+                        timeFrame={timeFrame}
+                    />
+                )}
             </div>
 
             {/* Recent Activity Chart */}

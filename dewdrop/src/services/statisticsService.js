@@ -332,5 +332,68 @@ export const statisticsService = {
             console.error(`Error in getDeckStats for deck ${deckId}:`, error);
             return emptyStats;
         }
+    },
+
+    // Get daily study activity for heat map
+    async getStudyActivity(period = 'year') {
+        try {
+            // Calculate date range based on period
+            const endDate = new Date();
+            const startDate = new Date();
+
+            switch (period) {
+                case 'week':
+                    startDate.setDate(endDate.getDate() - 7);
+                    break;
+                case 'month':
+                    startDate.setMonth(endDate.getMonth() - 1);
+                    break;
+                case 'year':
+                    startDate.setFullYear(endDate.getFullYear() - 1);
+                    break;
+                default:
+                    startDate.setFullYear(endDate.getFullYear() - 1);
+            }
+
+            // Fetch all reviews within the date range
+            const { data: reviews, error } = await supabase
+                .from('reviews')
+                .select('review_date')
+                .gte('review_date', startDate.toISOString())
+                .lte('review_date', endDate.toISOString());
+
+            if (error) {
+                console.error('Error fetching study activity:', error);
+                return [];
+            }
+
+            if (!reviews || reviews.length === 0) {
+                return [];
+            }
+
+            // Group reviews by date
+            const activityByDate = reviews.reduce((acc, review) => {
+                // Extract date part only
+                const reviewDate = review.review_date.split('T')[0];
+
+                if (!acc[reviewDate]) {
+                    acc[reviewDate] = 0;
+                }
+
+                acc[reviewDate]++;
+                return acc;
+            }, {});
+
+            // Convert to array with date and count
+            const activityData = Object.keys(activityByDate).map(date => ({
+                date,
+                count: activityByDate[date],
+            }));
+
+            return activityData;
+        } catch (error) {
+            console.error('Error in getStudyActivity:', error);
+            return [];
+        }
     }
 };
