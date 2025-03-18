@@ -25,18 +25,30 @@ This repository contains Docker configuration files for deploying the Dewdrop fl
 
 ## Deployment
 
+### Environment Variables
+
+For a Vite application, environment variables starting with `VITE_` need to be available during both build time and runtime. Our Docker configuration handles this by:
+
+1. Using build args to pass variables to the Dockerfile during build time
+2. Creating a `.env` file inside the container
+3. Setting environment variables for runtime access
+
+This approach ensures that the Supabase credentials are properly integrated into the built JavaScript bundle.
+
 ### Production Deployment
 
 To deploy the application in production mode:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 This will:
-- Build the frontend using Vite
+- Build the frontend using Vite with the Supabase environment variables
 - Serve the application using Nginx
 - Make the application available at http://localhost:8080
+
+**Important**: Make sure your `.env` file contains the correct Supabase credentials and is located in the project root directory (same level as docker-compose.yml, not inside the dewdrop directory).
 
 ### Development Deployment
 

@@ -10,6 +10,12 @@ RUN npm install react-markdown
 # Copy source code
 COPY . .
 
+# Create .env file for runtime environment variables 
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+RUN echo "VITE_SUPABASE_URL=$VITE_SUPABASE_URL" > .env && \
+    echo "VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY" >> .env
+
 # Expose the Vite dev server port
 EXPOSE 3000
 

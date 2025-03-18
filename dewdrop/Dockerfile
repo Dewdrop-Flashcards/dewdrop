@@ -11,6 +11,12 @@ RUN npm install react-markdown
 # Copy the rest of the source code
 COPY . .
 
+# Create .env file for build-time environment variables
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+RUN echo "VITE_SUPABASE_URL=$VITE_SUPABASE_URL" > .env && \
+    echo "VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY" >> .env
+
 # Build the application
 RUN npm run build
 
