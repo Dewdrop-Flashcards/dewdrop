@@ -8,7 +8,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [stats, setStats] = useState({
-        totalDecks: 0,
+        newCards: 0,
         totalCards: 0,
         dueCards: 0,
         recentlyStudied: 0
@@ -26,6 +26,9 @@ export default function Dashboard() {
 
                 // Get all due cards
                 const dueCardsData = await cardService.getDueCards();
+
+                // Get all new cards (never reviewed)
+                const newCardsData = await cardService.getNewCards();
 
                 // Get reviews by date to calculate studied today
                 const reviewsByDate = await statisticsService.getReviewsByDate('week');
@@ -45,7 +48,7 @@ export default function Dashboard() {
                 }
 
                 setStats({
-                    totalDecks: decksData.length,
+                    newCards: newCardsData.length,
                     totalCards: totalCards,
                     dueCards: dueCardsData.length,
                     recentlyStudied: studiedToday
@@ -89,20 +92,6 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 <div className="bg-white rounded-lg shadow p-6">
                     <div className="flex items-center">
-                        <div className="p-3 rounded-full bg-blue-100 text-blue-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
-                            </svg>
-                        </div>
-                        <div className="ml-4">
-                            <h2 className="font-semibold text-gray-600">Total Decks</h2>
-                            <p className="text-2xl font-bold text-gray-800">{stats.totalDecks}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="flex items-center">
                         <div className="p-3 rounded-full bg-green-100 text-green-600">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
@@ -112,6 +101,20 @@ export default function Dashboard() {
                         <div className="ml-4">
                             <h2 className="font-semibold text-gray-600">Total Cards</h2>
                             <p className="text-2xl font-bold text-gray-800">{stats.totalCards}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex items-center">
+                        <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
+                            </svg>
+                        </div>
+                        <div className="ml-4">
+                            <h2 className="font-semibold text-gray-600">New Cards</h2>
+                            <p className="text-2xl font-bold text-gray-800">{stats.newCards}</p>
                         </div>
                     </div>
                 </div>

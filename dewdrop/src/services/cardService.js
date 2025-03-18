@@ -54,6 +54,24 @@ export const cardService = {
         return data;
     },
 
+    // Get new cards (never reviewed, review_count = 0)
+    async getNewCards(deckId = null) {
+        let query = supabase
+            .from('cards')
+            .select('*')
+            .eq('review_count', 0);
+
+        // If deckId is provided, filter by deck
+        if (deckId) {
+            query = query.eq('deck_id', deckId);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
     // Create a new card
     async createCard(card, frontImageFile = null, backImageFile = null) {
         // Handle image uploads if provided
