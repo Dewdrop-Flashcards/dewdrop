@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { cardService } from '../../services/cardService';
 import { deckService } from '../../services/deckService';
+import { settingsService } from '../../services/settingsService';
 import ReviewCard from './ReviewCard';
 
 export default function StudySession() {
@@ -27,6 +28,12 @@ export default function StudySession() {
         async function loadData() {
             try {
                 setLoading(true);
+
+                // Load user settings first
+                const userSettings = await settingsService.getUserSettings();
+
+                // Update card service with user's preference
+                cardService.setNewCardsPerDay(userSettings.new_cards_per_day);
 
                 // Load deck information if deckId is provided
                 if (deckId) {

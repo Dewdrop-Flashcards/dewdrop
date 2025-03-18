@@ -4,6 +4,9 @@ import { storageService } from './storageService';
 // Default limit for new cards per day per deck
 const DEFAULT_NEW_CARDS_PER_DAY = 10;
 
+// This will be updated when user settings are loaded
+let userNewCardsPerDay = DEFAULT_NEW_CARDS_PER_DAY;
+
 // SM-2 algorithm constants
 const MIN_EASE_FACTOR = 1.3;
 const EASE_FACTOR_MODIFY = 0.15;
@@ -16,8 +19,16 @@ const getNewCardsKey = (deckId) => {
 };
 
 export const cardService = {
-    // Expose the daily new card limit as a property
-    NEW_CARDS_PER_DAY: DEFAULT_NEW_CARDS_PER_DAY,
+    // Expose the daily new card limit as a getter property
+    get NEW_CARDS_PER_DAY() {
+        return userNewCardsPerDay;
+    },
+
+    // Set the new cards per day limit (used when loading user settings)
+    setNewCardsPerDay(limit) {
+        userNewCardsPerDay = limit;
+        return limit;
+    },
 
     // Get the number of new cards already shown today for a deck
     getNewCardsShownToday(deckId = null) {
@@ -40,7 +51,11 @@ export const cardService = {
     },
 
     // Get a combination of review cards and new cards for study, respecting the daily new card limit
-    async getCardsForStudy(deckId = null, newCardsPerDay = DEFAULT_NEW_CARDS_PER_DAY) {
+    async getCardsForStudy(deckId = null, newCardsPerDay = null) {
+        // Use the user's preferred limit if not specified
+        if (newCardsPerDay === null) {
+            newCardsPerDay = this.NEW_CARDS_PER_DAY;
+        }
         // Get the number of new cards already shown today
         const newCardsShown = this.getNewCardsShownToday(deckId);
 
