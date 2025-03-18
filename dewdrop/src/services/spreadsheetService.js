@@ -14,14 +14,22 @@ export const spreadsheetService = {
             reader.onload = (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    const workbook = XLSX.read(data, {
+                        type: 'array',
+                        // Add proper encoding options
+                        codepage: 65001, // UTF-8 codepage
+                        raw: true       // Keep raw values
+                    });
 
                     // Get the first worksheet
                     const worksheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[worksheetName];
 
-                    // Convert to JSON with headers
-                    const rows = XLSX.utils.sheet_to_json(worksheet);
+                    // Convert to JSON with headers, preserving raw text values
+                    const rows = XLSX.utils.sheet_to_json(worksheet, {
+                        raw: true,  // Preserve raw values including special characters
+                        defval: ''  // Default empty string for missing values
+                    });
                     resolve(rows);
                 } catch (error) {
                     reject(new Error(`Failed to parse spreadsheet: ${error.message}`));
@@ -48,14 +56,23 @@ export const spreadsheetService = {
             reader.onload = (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    const workbook = XLSX.read(data, {
+                        type: 'array',
+                        // Add proper encoding options
+                        codepage: 65001, // UTF-8 codepage
+                        raw: true       // Keep raw values
+                    });
 
                     // Get the first worksheet
                     const worksheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[worksheetName];
 
-                    // Convert to JSON with headers
-                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    // Convert to JSON with headers, preserving raw text values
+                    const rows = XLSX.utils.sheet_to_json(worksheet, {
+                        header: 1,
+                        raw: true,  // Preserve raw values including special characters
+                        defval: ''  // Default empty string for missing values
+                    });
 
                     // First row contains headers
                     if (rows.length > 0) {
