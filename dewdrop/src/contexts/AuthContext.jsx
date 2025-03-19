@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
                 setSession(session);
                 setUser(session?.user ?? null);
                 setLoading(false);
-                
+
                 // Handle password recovery event
                 if (event === 'PASSWORD_RECOVERY') {
                     console.log('Password recovery event detected');
@@ -52,18 +52,24 @@ export function AuthProvider({ children }) {
         signIn: (data) => supabase.auth.signInWithPassword(data),
         signUp: (data) => supabase.auth.signUp(data),
         signOut: () => supabase.auth.signOut(),
+        signInWithGitHub: () => supabase.auth.signInWithOAuth({
+            provider: 'github',
+            options: {
+                redirectTo: `${window.location.origin}/dashboard`,
+            },
+        }),
         updatePassword: async (currentPassword, newPassword) => {
             // First verify the current password by attempting to sign in
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email: user.email,
                 password: currentPassword,
             });
-            
+
             // If sign-in fails, the current password is incorrect
             if (signInError) {
                 return { error: { message: 'Current password is incorrect' } };
             }
-            
+
             // If sign-in succeeds, update to the new password
             return supabase.auth.updateUser({ password: newPassword });
         },
