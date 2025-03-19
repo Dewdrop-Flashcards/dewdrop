@@ -67,13 +67,15 @@ export const cardService = {
         // How many new cards we can still show today
         const newCardsRemaining = Math.max(0, newCardsPerDay - newCardsShown);
 
-        const today = getTodayDateString();
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowString = tomorrow.toISOString().split('T')[0];
 
-        // Get due review cards (cards with review_count > 0 that are due today)
+        // Get due review cards (cards with review_count > 0 that are due before tomorrow)
         let reviewQuery = supabase
             .from('cards')
             .select('*')
-            .gte('next_review_date', today)
+            .lt('next_review_date', tomorrowString)
             .gt('review_count', 0);
 
         // If deckId is provided, filter by deck
@@ -143,11 +145,14 @@ export const cardService = {
 
     // Get cards due for review
     async getDueCards(deckId = null) {
-        const today = getTodayDateString();
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowString = tomorrow.toISOString().split('T')[0];
+
         let query = supabase
             .from('cards')
             .select('*')
-            .lte('next_review_date', today);
+            .lt('next_review_date', tomorrowString);
 
         // If deckId is provided, filter by deck
         if (deckId) {
