@@ -18,6 +18,11 @@ const getNewCardsKey = (deckId) => {
     return `dewdrop_new_cards_${today}_${deckId || 'all'}`;
 };
 
+// Helper function to get today's date as YYYY-MM-DD
+const getTodayDateString = () => {
+    return new Date().toISOString().split('T')[0];
+};
+
 export const cardService = {
     // Expose the daily new card limit as a getter property
     get NEW_CARDS_PER_DAY() {
@@ -62,11 +67,13 @@ export const cardService = {
         // How many new cards we can still show today
         const newCardsRemaining = Math.max(0, newCardsPerDay - newCardsShown);
 
+        const today = getTodayDateString();
+
         // Get due review cards (cards with review_count > 0 that are due today)
         let reviewQuery = supabase
             .from('cards')
             .select('*')
-            .lte('next_review_date', new Date().toISOString())
+            .gte('next_review_date', today)
             .gt('review_count', 0);
 
         // If deckId is provided, filter by deck
@@ -136,10 +143,11 @@ export const cardService = {
 
     // Get cards due for review
     async getDueCards(deckId = null) {
+        const today = getTodayDateString();
         let query = supabase
             .from('cards')
             .select('*')
-            .lte('next_review_date', new Date().toISOString());
+            .lte('next_review_date', today);
 
         // If deckId is provided, filter by deck
         if (deckId) {
@@ -365,7 +373,7 @@ export const cardService = {
         nextReviewDate.setDate(nextReviewDate.getDate() + newInterval);
 
         return {
-            nextReviewDate: nextReviewDate.toISOString(),
+            nextReviewDate: nextReviewDate.toISOString().split('T')[0], // Use date-only format
             easeFactor: newEaseFactor,
             interval: newInterval
         };
