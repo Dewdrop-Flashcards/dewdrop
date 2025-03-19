@@ -23,6 +23,7 @@ export default function StudySession() {
     });
     const [cramMode, setCramMode] = useState(false);
     const [newCardsRemaining, setNewCardsRemaining] = useState(0);
+    const [reviewCardsRemaining, setReviewCardsRemaining] = useState(0);
 
     useEffect(() => {
         async function loadData() {
@@ -48,20 +49,22 @@ export default function StudySession() {
 
                 const newCardLimit = cardService.NEW_CARDS_PER_DAY;
                 const remaining = Math.max(0, newCardLimit - newCardsShown);
-                setNewCardsRemaining(remaining);
 
                 // Load cards for review, combining due cards and new cards with a limit
                 const cardsData = deckId
                     ? await cardService.getCardsForStudy(deckId)
                     : await cardService.getCardsForStudy();
 
-                if (cardsData.length === 0) {
+                setNewCardsRemaining(cardsData.newCards.length);
+                setReviewCardsRemaining(cardsData.reviewCards.length);
+
+                if (cardsData.combinedCards.length === 0) {
                     setCards([]);
                 } else {
-                    setCards(cardsData);
+                    setCards(cardsData.combinedCards);
                     setSessionStats(prev => ({
                         ...prev,
-                        total: cardsData.length
+                        total: cardsData.combinedCards.length
                     }));
                 }
             } catch (err) {
@@ -121,9 +124,14 @@ export default function StudySession() {
             const timeTaken = 0; // Would need to add timing functionality
             await cardService.recordReview(cardId, performanceScore, timeTaken);
 
-            // If this was a new card, increment the counter for today
-            if (isNewCard && !cramMode) {
-                cardService.incrementNewCardsShownToday(deckId);
+            // Update the appropriate counter
+            if (!cramMode) {
+                if (isNewCard) {
+                    cardService.incrementNewCardsShownToday(deckId);
+                    setNewCardsRemaining(prev => Math.max(0, prev - 1));
+                } else {
+                    setReviewCardsRemaining(prev => Math.max(0, prev - 1));
+                }
             }
 
             // Update stats
@@ -297,9 +305,14 @@ export default function StudySession() {
                                 </span>
                             )}
                             {!cramMode && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs sm:text-sm font-medium bg-blue-100 text-blue-800">
-                                    {newCardsRemaining} new card{newCardsRemaining !== 1 ? 's' : ''} remaining today
-                                </span>
+                                <>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs sm:text-sm font-medium bg-blue-100 text-blue-800">
+                                        {newCardsRemaining} new card{newCardsRemaining !== 1 ? 's' : ''} remaining
+                                    </span>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs sm:text-sm font-medium bg-green-100 text-green-800">
+                                        {reviewCardsRemaining} review card{reviewCardsRemaining !== 1 ? 's' : ''} remaining
+                                    </span>
+                                </>
                             )}
                         </div>
                     </div>

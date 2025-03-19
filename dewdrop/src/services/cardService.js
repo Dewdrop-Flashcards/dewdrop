@@ -78,11 +78,6 @@ export const cardService = {
 
         if (reviewError) throw reviewError;
 
-        // If we can't show any more new cards today, just return review cards
-        if (newCardsRemaining <= 0) {
-            return reviewCards;
-        }
-
         // Get new cards (never reviewed before)
         let newQuery = supabase
             .from('cards')
@@ -101,8 +96,14 @@ export const cardService = {
         // Only take up to the remaining limit of new cards
         const newCards = allNewCards.slice(0, newCardsRemaining);
 
-        // Return a combination of review cards and new cards
-        return [...reviewCards, ...newCards];
+        // Combine review cards and new cards, prioritizing review cards
+        const combinedCards = [...reviewCards, ...newCards];
+
+        return {
+            reviewCards: reviewCards,
+            newCards: newCards,
+            combinedCards: combinedCards
+        };
     },
     // Get all cards for a specific deck (or all decks if deckId is null)
     async getCardsByDeckId(deckId) {
