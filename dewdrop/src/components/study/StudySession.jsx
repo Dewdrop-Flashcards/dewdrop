@@ -25,6 +25,32 @@ export default function StudySession() {
     const [newCardsRemaining, setNewCardsRemaining] = useState(0);
     const [reviewCardsRemaining, setReviewCardsRemaining] = useState(0);
 
+    // Use latest labels directly from DB
+    const [frontLabelText, setFrontLabelText] = useState('Question');
+    const [backLabelText, setBackLabelText] = useState('Answer');
+
+    // Load the custom front/back labels
+    useEffect(() => {
+        async function loadCustomLabels() {
+            if (deckId) {
+                try {
+                    const freshDeckData = await deckService.getDeckById(deckId);
+                    console.log("Fresh deck data loaded:", freshDeckData);
+
+                    if (freshDeckData) {
+                        setFrontLabelText(freshDeckData.front_label || 'Question');
+                        setBackLabelText(freshDeckData.back_label || 'Answer');
+                    }
+                } catch (err) {
+                    console.error("Error loading fresh deck data:", err);
+                }
+            }
+        }
+
+        loadCustomLabels();
+    }, [deckId]);
+
+    // Load initial card data
     useEffect(() => {
         async function loadData() {
             try {
@@ -338,6 +364,8 @@ export default function StudySession() {
                 onRate={handleCardRated}
                 isReviewingFailed={reviewingFailedCards && currentCardIndex >= cards.length - failedCards.length}
                 isNew={currentCard.review_count === 0}
+                frontLabel={frontLabelText}
+                backLabel={backLabelText}
             />
         </div>
     );

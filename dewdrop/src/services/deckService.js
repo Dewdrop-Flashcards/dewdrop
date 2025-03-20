@@ -38,6 +38,15 @@ export const deckService = {
 
     // Create a new deck
     async createDeck(deck) {
+        // Ensure front_label and back_label have default values if not provided
+        if (deck.front_label === undefined || deck.front_label === '') {
+            deck.front_label = 'Question';
+        }
+
+        if (deck.back_label === undefined || deck.back_label === '') {
+            deck.back_label = 'Answer';
+        }
+
         const { data, error } = await supabase
             .from('decks')
             .insert(deck)
@@ -53,6 +62,15 @@ export const deckService = {
         if (!deckId) {
             console.error('updateDeck called with undefined deckId');
             throw new Error('Deck ID is required for updating a deck');
+        }
+
+        // Ensure front_label and back_label have default values if not provided
+        if (updates.front_label === undefined || updates.front_label === '') {
+            updates.front_label = 'Question';
+        }
+
+        if (updates.back_label === undefined || updates.back_label === '') {
+            updates.back_label = 'Answer';
         }
 
         console.log(`Updating deck with ID: ${deckId}`, updates);

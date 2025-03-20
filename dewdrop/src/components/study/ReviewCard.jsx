@@ -3,7 +3,9 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { storageService } from '../../services/storageService';
 
-export default function ReviewCard({ card, onRate, isReviewingFailed = false, isNew = false }) {
+export default function ReviewCard({ card, onRate, isReviewingFailed = false, isNew = false, frontLabel = 'Question', backLabel = 'Answer' }) {
+    // Force console log of props to help debug
+    console.log("ReviewCard props:", { frontLabel, backLabel });
     const [isFlipped, setIsFlipped] = useState(false);
     const [isDifficultySectionVisible, setIsDifficultySectionVisible] = useState(false);
     const [frontImageUrl, setFrontImageUrl] = useState(null);
@@ -84,7 +86,10 @@ export default function ReviewCard({ card, onRate, isReviewingFailed = false, is
                             transition={{ duration: 0.05 }}
                         >
                             <div className="text-center">
-                                <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4 text-gray-800">Question</h3>
+                                <div className="flex justify-center items-center mb-2">
+                                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">Viewing: Front Side</span>
+                                </div>
+                                <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4 text-gray-800">{frontLabel}</h3>
                                 {frontImageUrl && (
                                     <div className="mb-3 flex justify-center">
                                         <img
@@ -99,7 +104,7 @@ export default function ReviewCard({ card, onRate, isReviewingFailed = false, is
                                 </div>
                             </div>
                             <div className="mt-auto text-center text-sm text-gray-500">
-                                Click to reveal answer
+                                Click to reveal {backLabel}
                             </div>
                         </motion.div>
                     ) : (
@@ -112,7 +117,10 @@ export default function ReviewCard({ card, onRate, isReviewingFailed = false, is
                             transition={{ duration: 0.05 }}
                         >
                             <div className="text-center">
-                                <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4 text-blue-600">Answer</h3>
+                                <div className="flex justify-center items-center mb-2">
+                                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Viewing: Back Side</span>
+                                </div>
+                                <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4 text-blue-600">{backLabel}</h3>
                                 {backImageUrl && (
                                     <div className="mb-3 flex justify-center">
                                         <img
