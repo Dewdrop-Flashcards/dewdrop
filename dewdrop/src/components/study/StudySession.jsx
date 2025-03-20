@@ -25,30 +25,69 @@ export default function StudySession() {
     const [newCardsRemaining, setNewCardsRemaining] = useState(0);
     const [reviewCardsRemaining, setReviewCardsRemaining] = useState(0);
 
-    // Use latest labels directly from DB
-    const [frontLabelText, setFrontLabelText] = useState('Question');
-    const [backLabelText, setBackLabelText] = useState('Answer');
+    // Store deck labels in a map: deck_id -> {frontLabel, backLabel}
+    const [deckLabelsMap, setDeckLabelsMap] = useState({});
 
-    // Load the custom front/back labels
+    // Load the custom front/back labels for the current deck (if specified)
     useEffect(() => {
-        async function loadCustomLabels() {
+        async function loadMainDeckLabels() {
             if (deckId) {
                 try {
-                    const freshDeckData = await deckService.getDeckById(deckId);
-                    console.log("Fresh deck data loaded:", freshDeckData);
+                    const deckData = await deckService.getDeckById(deckId);
 
-                    if (freshDeckData) {
-                        setFrontLabelText(freshDeckData.front_label || 'Question');
-                        setBackLabelText(freshDeckData.back_label || 'Answer');
+                    if (deckData) {
+                        // Add the main deck's labels to the map
+                        setDeckLabelsMap(prev => ({
+                            ...prev,
+                            [deckId]: {
+                                frontLabel: deckData.front_label || 'Question',
+                                backLabel: deckData.back_label || 'Answer'
+                            }
+                        }));
                     }
                 } catch (err) {
-                    console.error("Error loading fresh deck data:", err);
+                    console.error("Error loading deck data:", err);
                 }
             }
         }
 
-        loadCustomLabels();
+        loadMainDeckLabels();
     }, [deckId]);
+
+    // Load labels for all decks represented in the cards
+    useEffect(() => {
+        async function loadDeckLabelsForCards() {
+            if (cards.length > 0) {
+                try {
+                    // Get unique deck IDs from the cards
+                    const uniqueDeckIds = [...new Set(cards.map(card => card.deck_id))];
+
+                    // Fetch deck info for each unique deck ID
+                    const deckLabels = { ...deckLabelsMap };
+
+                    // Process each deck only if we don't already have its labels
+                    for (const deckId of uniqueDeckIds) {
+                        if (!deckLabelsMap[deckId]) {
+                            const deckData = await deckService.getDeckById(deckId);
+                            if (deckData) {
+                                deckLabels[deckId] = {
+                                    frontLabel: deckData.front_label || 'Question',
+                                    backLabel: deckData.back_label || 'Answer'
+                                };
+                            }
+                        }
+                    }
+
+                    // Update the deck labels map with all labels
+                    setDeckLabelsMap(deckLabels);
+                } catch (err) {
+                    console.error("Error loading deck labels for cards:", err);
+                }
+            }
+        }
+
+        loadDeckLabelsForCards();
+    }, [cards, deckLabelsMap]);
 
     // Load initial card data
     useEffect(() => {
@@ -364,8 +403,8 @@ export default function StudySession() {
                 onRate={handleCardRated}
                 isReviewingFailed={reviewingFailedCards && currentCardIndex >= cards.length - failedCards.length}
                 isNew={currentCard.review_count === 0}
-                frontLabel={frontLabelText}
-                backLabel={backLabelText}
+                frontLabel={deckLabelsMap[currentCard.deck_id]?.frontLabel || 'Question'}
+                backLabel={deckLabelsMap[currentCard.deck_id]?.backLabel || 'Answer'}
             />
         </div>
     );
